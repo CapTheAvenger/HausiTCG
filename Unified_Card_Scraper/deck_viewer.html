@@ -1063,7 +1063,7 @@
             // Aggregate cards by name (combine same cards from different variants)
             const cardMap = new Map();
             deckCards.forEach(card => {
-                const key = `${card.card_name}_${card.set_code}_${card.card_number}`;
+                const key = `${card.card_name}_${card.set_code}_${card.set_number}`;
                 if (!cardMap.has(key)) {
                     cardMap.set(key, { ...card, sources: [card.archetype] });
                 } else {
