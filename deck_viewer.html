@@ -907,20 +907,26 @@
         async function loadCardsData() {
             try {
                 const candidates = [
-                    'unified_card_data.named.csv',
-                    'unified_card_data.updated.csv',
                     'unified_card_data.csv'
                 ];
                 let loaded = false;
 
                 for (const fileName of candidates) {
-                    const response = await fetch(fileName);
-                    if (response.ok) {
-                        const text = await response.text();
-                        cardsData = parseCSV(text);
-                        populateDeckDropdown();
-                        loaded = true;
-                        break;
+                    try {
+                        console.log('Attempting to load:', fileName);
+                        const response = await fetch(fileName, {cache: 'no-store'});
+                        console.log('Response status:', response.status, response.ok);
+                        if (response.ok) {
+                            const text = await response.text();
+                            console.log('Loaded CSV, size:', text.length);
+                            cardsData = parseCSV(text);
+                            console.log('Parsed CSV, rows:', cardsData.size);
+                            populateDeckDropdown();
+                            loaded = true;
+                            break;
+                        }
+                    } catch (err) {
+                        console.error('Error loading', fileName, ':', err);
                     }
                 }
 
