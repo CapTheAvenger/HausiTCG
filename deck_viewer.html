@@ -986,8 +986,17 @@
         }
         
         function loadCardImageWithProxy(imgElement, originalUrl, cardName, count) {
+            // Try adding _R_ to the URL if not present
+            let urlWithR = originalUrl;
+            if (originalUrl && !originalUrl.includes('_R_')) {
+                // Insert _R_ before the extension
+                urlWithR = originalUrl.replace(/\.([^.]+)$/, '_R_.$1');
+            }
+            
             // If direct load fails, try alternative image services
             const proxies = [
+                // Try with _R_ suffix
+                urlWithR,
                 // Try weserv.nl proxy
                 `https://images.weserv.nl/?url=${encodeURIComponent(originalUrl)}`,
                 // Try another proxy service  
@@ -1227,11 +1236,23 @@
 
             visualDiv.classList.add('show');
 
-            // Sort cards by set number for grid display
+            // Sort cards by type, then set number, then relevance
             const sortedForGrid = [...filteredCards].sort((a, b) => {
+                // First sort by card type
+                const typeOrder = ['Pokemon', 'Trainer', 'Supporter', 'Item', 'Tool', 'Stadium', 'Special Energy', 'Energy'];
+                const typeA = typeOrder.indexOf(a.card_type || 'Unknown');
+                const typeB = typeOrder.indexOf(b.card_type || 'Unknown');
+                if (typeA !== typeB) return (typeA === -1 ? 999 : typeA) - (typeB === -1 ? 999 : typeB);
+                
+                // Then by set number
                 const numA = parseInt(a.set_number || '0', 10);
                 const numB = parseInt(b.set_number || '0', 10);
-                return numA - numB;
+                if (numA !== numB) return numA - numB;
+                
+                // Finally by relevance (max_count descending)
+                const countA = parseInt(a.max_count || '0', 10);
+                const countB = parseInt(b.max_count || '0', 10);
+                return countB - countA;
             });
 
             grid.innerHTML = sortedForGrid.map(card => {
