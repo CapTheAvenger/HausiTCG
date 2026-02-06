@@ -308,24 +308,20 @@
         
         .card-visual .card-count-badge {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 3px;
+            right: 3px;
             background: #dc3545;
             color: white;
             border-radius: 50%;
-            width: 25px;
-            height: 25px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2em;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-size: 11px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            z-index: 2;
         }
         
         .card-visual .card-name-overlay {
@@ -338,6 +334,119 @@
             padding: 10px;
             font-size: 0.85em;
             font-weight: 600;
+        }
+        
+        /* Compact image view für Mobilansicht */
+        .compact-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 4px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .compact-card {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            background: #f0f0f0;
+        }
+        
+        .compact-card:active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .compact-card img {
+            width: 50px;
+            height: 70px;
+            display: block;
+            object-fit: cover;
+        }
+        
+        .compact-card .compact-badge {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 9px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        
+        .image-view-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .image-view-modal.show {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .image-view-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: auto;
+        }
+        
+        .image-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .image-view-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .image-view-close {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-view-close:hover {
+            background: #c82333;
         }
         
         .card-visual.no-image {
@@ -474,6 +583,22 @@
         .btn-success {
             background: #28a745;
             color: white;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
         }
         
         .deck-list {
@@ -688,6 +813,7 @@
                     <label for="filterSelect">🔍 Karten Filter:</label>
                     <select id="filterSelect">
                         <option value="all">Alle Karten</option>
+                        <option value="90">Karten in >90% der Decks (Core)</option>
                         <option value="70">Karten in >70% der Decks</option>
                         <option value="50">Karten in >50% der Decks</option>
                     </select>
@@ -745,6 +871,10 @@
                 <span id="cardCount">0 Karten</span>
             </div>
             
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-warning" onclick="generateDeckCardsImage()" id="generateDeckCardsBtn" style="display: none;">🖼️ Übersicht generieren</button>
+            </div>
+            
             <!-- Deck Visualisierung -->
             <div class="deck-visual" id="deckVisual" style="display: none;">
                 <h3>🎨 Deck Übersicht</h3>
@@ -779,6 +909,8 @@
             <h2>🛠️ Deck Builder (60 Karten)</h2>
             <div class="builder-controls">
                 <button class="btn btn-primary" onclick="exportToPokemonLive()">📋 Für Pokemon Live kopieren</button>
+                <button class="btn btn-info" onclick="copyDeckToClipboard()">📋 Alle Karten kopieren</button>
+                <button class="btn btn-warning" onclick="generateDeckImage()">🖼️ Karten Übersicht generieren</button>
                 <button class="btn btn-secondary" onclick="clearDeck()">🗑️ Deck leeren</button>
                 <button class="btn btn-success" onclick="autoComplete()">⚡ Auto-Complete (60 Karten)</button>
             </div>
@@ -822,6 +954,7 @@
                 <button class="btn btn-primary" onclick="applyCardFilters()">🔎 Anzeigen</button>
                 <button class="btn btn-secondary" onclick="clearCardFilters()">🧹 Filter zurücksetzen</button>
                 <button class="btn btn-success" onclick="copyFilteredCards()">📋 Gefilterte Karten kopieren</button>
+                <button class="btn btn-warning" onclick="generateFilteredCardsImage()">🖼️ Ansicht generieren</button>
             </div>
 
             <div class="filter-summary">
@@ -864,6 +997,7 @@
         let myDeck = [];
         let cardTypeDatabase = new Map(); // Map of card name -> type
         let filteredCards = [];
+        let currentDeckCards = [];  // For generating deck cards image
         
         // Load data on page load
         document.addEventListener('DOMContentLoaded', async () => {
@@ -872,13 +1006,14 @@
             await loadMatchupsData();
             await loadMatchupDetailsData();
             await loadCityLeagueData();
+            populateDeckDropdown();  // Call after all data is loaded
             initializeCardFilterUI();
             setupEventListeners();
         });
         
         async function loadCardDatabase() {
             try {
-                const response = await fetch('all_cards_database.csv');
+                const response = await fetch('../data/all_cards_database.csv');
                 const text = await response.text();
                 // Remove BOM if present
                 let cleanText = text;
@@ -907,7 +1042,7 @@
         async function loadCardsData() {
             try {
                 const candidates = [
-                    'unified_card_data.csv'
+                    '../data/unified_card_data.csv'
                 ];
                 let loaded = false;
 
@@ -921,7 +1056,6 @@
                             console.log('Loaded CSV, size:', text.length);
                             cardsData = parseCSV(text);
                             console.log('Parsed CSV, rows:', cardsData.size);
-                            populateDeckDropdown();
                             loaded = true;
                             break;
                         }
@@ -941,7 +1075,7 @@
         
         async function loadMatchupsData() {
             try {
-                const response = await fetch('limitless_online_decks.csv');
+                const response = await fetch('../data/limitless_online_decks.csv');
                 if (response.ok) {
                     const text = await response.text();
                     matchupsData = parseCSV(text);
@@ -956,7 +1090,7 @@
         
         async function loadMatchupDetailsData() {
             try {
-                const response = await fetch('limitless_online_decks_matchups.csv');
+                const response = await fetch('../data/limitless_online_decks_matchups.csv');
                 if (response.ok) {
                     const text = await response.text();
                     matchupDetailsData = parseCSV(text);
@@ -971,7 +1105,7 @@
         
         async function loadCityLeagueData() {
             try {
-                const response = await fetch('city_league_archetypes_comparison.csv');
+                const response = await fetch('../data/city_league_archetypes_comparison.csv');
                 if (response.ok) {
                     const text = await response.text();
                     cityLeagueData = parseCSV(text);
@@ -1069,14 +1203,104 @@
         
         function populateDeckDropdown() {
             const deckSelect = document.getElementById('deckSelect');
-            const archetypes = [...new Set(cardsData.map(c => c.archetype))].sort((a, b) => a.localeCompare(b));
             
-            archetypes.forEach(archetype => {
-                const option = document.createElement('option');
-                option.value = archetype;
-                option.textContent = archetype;
-                deckSelect.appendChild(option);
-            });
+            // Clear existing options
+            deckSelect.innerHTML = '<option value="">-- Bitte Deck wählen --</option>';
+            
+            const allArchetypes = [...new Set(cardsData.map(c => c.archetype))];
+            
+            // Normalize function for case-insensitive comparison
+            const normalize = (str) => str.toLowerCase().trim();
+            
+            // Get top 20 Limitless - use deck_name from CSV directly (these are the TRUE rankings)
+            const top20Limitless = matchupsData
+                .filter(m => m.rank && parseInt(m.rank) <= 20)
+                .sort((a, b) => parseInt(a.rank || 999) - parseInt(b.rank || 999))
+                .map(m => m.deck_name);
+            
+            // Get top 10 City League from Japan data
+            const top10Japan = cityLeagueData
+                .filter(m => m.archetype)
+                .sort((a, b) => parseInt(b.new_appearances || 0) - parseInt(a.new_appearances || 0))
+                .slice(0, 10)
+                .map(m => m.archetype);
+            
+            // Function to find best matching archetype from cardsData
+            const findMatchingArchetype = (deckName) => {
+                const normalized = normalize(deckName);
+                // Try exact match first
+                const exact = allArchetypes.find(arch => normalize(arch) === normalized);
+                if (exact) return exact;
+                
+                // Try partial match (contains)
+                const partial = allArchetypes.find(arch => normalize(arch).includes(normalized) || normalized.includes(normalize(arch)));
+                return partial || null;
+            };
+            
+            // Map deck names to actual archetypes from cardsData
+            const top20WithArchetypes = top20Limitless
+                .map(deckName => ({
+                    deckName: deckName,
+                    archetype: findMatchingArchetype(deckName)
+                }))
+                .filter(item => item.archetype !== null);
+            
+            const top10WithArchetypes = top10Japan
+                .map(deckName => ({
+                    deckName: deckName,
+                    archetype: findMatchingArchetype(deckName)
+                }))
+                .filter(item => item.archetype !== null);
+            
+            // Get set of archetypes used in rankings
+            const topArchetypeNames = new Set([
+                ...top20WithArchetypes.map(item => item.archetype),
+                ...top10WithArchetypes.map(item => item.archetype)
+            ]);
+            
+            // Get remaining archetypes (not in rankings) - alphabetical
+            const remainingArchetypes = allArchetypes
+                .filter(arch => !topArchetypeNames.has(arch))
+                .sort((a, b) => a.localeCompare(b));
+            
+            // Add Top 20 Limitless
+            if (top20WithArchetypes.length > 0) {
+                const group1 = document.createElement('optgroup');
+                group1.label = '🏆 Top 20 Limitless';
+                top20WithArchetypes.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.archetype;
+                    option.textContent = item.archetype;
+                    group1.appendChild(option);
+                });
+                deckSelect.appendChild(group1);
+            }
+            
+            // Add Top 10 Japan City League
+            if (top10WithArchetypes.length > 0) {
+                const group2 = document.createElement('optgroup');
+                group2.label = '🇯🇵 Top 10 Japan City League';
+                top10WithArchetypes.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.archetype;
+                    option.textContent = item.archetype;
+                    group2.appendChild(option);
+                });
+                deckSelect.appendChild(group2);
+            }
+            
+            // Add remaining archetypes
+            if (remainingArchetypes.length > 0) {
+                const group3 = document.createElement('optgroup');
+                group3.label = '📋 Weitere Decks (alphabetisch)';
+                remainingArchetypes.forEach(archetype => {
+                    const option = document.createElement('option');
+                    option.value = archetype;
+                    option.textContent = archetype;
+                    group3.appendChild(option);
+                });
+                deckSelect.appendChild(group3);
+            }
         }
         
         function setupEventListeners() {
@@ -1323,7 +1547,29 @@
                 return;
             }
 
-            filteredCards.forEach(card => {
+            // Sort cards by type, then set code, then set number
+            const sortedCards = [...filteredCards].sort((a, b) => {
+                // First sort by card type
+                const typeOrder = ['Pokemon', 'Supporter', 'Item', 'Tool', 'Stadium', 'Special Energy', 'Energy'];
+                const typeA = typeOrder.indexOf(a.card_type || 'Unknown');
+                const typeB = typeOrder.indexOf(b.card_type || 'Unknown');
+                if (typeA !== typeB) return (typeA === -1 ? 999 : typeA) - (typeB === -1 ? 999 : typeB);
+                
+                // Then by set code (alphabetically)
+                const setCodeA = (a.set_code || '').toString();
+                const setCodeB = (b.set_code || '').toString();
+                if (setCodeA !== setCodeB) return setCodeA.localeCompare(setCodeB);
+                
+                // Then by set number (numerically)
+                const numA = parseInt(a.set_number || '0', 10);
+                const numB = parseInt(b.set_number || '0', 10);
+                if (numA !== numB) return numA - numB;
+                
+                // Finally by name
+                return (a.card_name || '').localeCompare(b.card_name || '');
+            });
+
+            sortedCards.forEach(card => {
                 const row = document.createElement('tr');
 
                 const imgCell = document.createElement('td');
@@ -1642,6 +1888,10 @@
 
         function getMatchupBalance(deckName) {
             if (!matchupDetailsData || matchupDetailsData.length === 0) return null;
+            if (!matchupsData || matchupsData.length === 0) return null;
+
+            // Get Top 20 deck names from Limitless Online rankings
+            const top20Names = matchupsData.slice(0, 20).map(d => normalizeArchetypeName(d.deck_name));
 
             const deckMatchups = matchupDetailsData.filter(m =>
                 normalizeArchetypeName(m.deck_name) === normalizeArchetypeName(deckName)
@@ -1653,6 +1903,12 @@
             let under50 = 0;
 
             deckMatchups.forEach(m => {
+                // Only count if opponent is in Top 20
+                const opponentName = m.opponent || m.opponent_deck;
+                if (!top20Names.includes(normalizeArchetypeName(opponentName))) {
+                    return;
+                }
+                
                 const winRate = parseFloat(String(m.win_rate || '').replace('%', '').replace(',', '.'));
                 if (Number.isNaN(winRate)) return;
                 if (winRate > 50) over50 += 1;
@@ -1674,16 +1930,33 @@
                 return;
             }
             
-            const topMatchups = deckMatchups.filter(m => m.matchup_type === 'BEST').slice(0, 5);
-            const worstMatchups = deckMatchups.filter(m => m.matchup_type === 'WORST').slice(0, 5);
+            // Sort by win rate
+            deckMatchups.sort((a, b) => {
+                const aRate = parseFloat(String(a.win_rate || '').replace('%', '').replace(',', '.')) || 0;
+                const bRate = parseFloat(String(b.win_rate || '').replace('%', '').replace(',', '.')) || 0;
+                return bRate - aRate;
+            });
             
-            document.getElementById('topMatchups').innerHTML = topMatchups.map(m => 
-                `<div class="matchup-item"><span>${m.opponent}</span><span style="color: #28a745; font-weight: bold;">${m.win_rate}% (${m.record})</span></div>`
-            ).join('') || '<p>Keine Daten verfügbar</p>';
+            // Get top 5 with >53% WR and worst 5 with <47% WR
+            const topMatchups = deckMatchups.filter(m => {
+                const wr = parseFloat(String(m.win_rate || '').replace('%', '').replace(',', '.')) || 0;
+                return wr > 53;
+            }).slice(0, 5);
             
-            document.getElementById('worstMatchups').innerHTML = worstMatchups.map(m => 
-                `<div class="matchup-item"><span>${m.opponent}</span><span style="color: #dc3545; font-weight: bold;">${m.win_rate}% (${m.record})</span></div>`
-            ).join('') || '<p>Keine Daten verfügbar</p>';
+            const worstMatchups = deckMatchups.filter(m => {
+                const wr = parseFloat(String(m.win_rate || '').replace('%', '').replace(',', '.')) || 0;
+                return wr < 47;
+            }).reverse().slice(0, 5);
+            
+            document.getElementById('topMatchups').innerHTML = topMatchups.map(m => {
+                const opponentName = m.opponent || m.opponent_deck || '';
+                return `<div class="matchup-item"><span>${opponentName}</span><span style="color: #28a745; font-weight: bold;">${m.win_rate}% (${m.record})</span></div>`;
+            }).join('') || '<p>Keine Matchup-Daten verfügbar</p>';
+            
+            document.getElementById('worstMatchups').innerHTML = worstMatchups.map(m => {
+                const opponentName = m.opponent || m.opponent_deck || '';
+                return `<div class="matchup-item"><span>${opponentName}</span><span style="color: #dc3545; font-weight: bold;">${m.win_rate}% (${m.record})</span></div>`;
+            }).join('') || '<p>Keine Matchup-Daten verfügbar</p>';
         }
         
         function updateCardsDisplay() {
@@ -1727,7 +2000,12 @@
             }
             
             // Apply percentage filter (only for main deck)
-            if (filter === '70') {
+            if (filter === '90') {
+                deckCards = deckCards.filter(c => 
+                    c.archetype === selectedDeck && parseFloat(c.percentage_in_archetype.replace(',', '.')) > 90 ||
+                    c.archetype !== selectedDeck
+                );
+            } else if (filter === '70') {
                 deckCards = deckCards.filter(c => 
                     c.archetype === selectedDeck && parseFloat(c.percentage_in_archetype.replace(',', '.')) > 70 ||
                     c.archetype !== selectedDeck
@@ -1744,6 +2022,15 @@
             
             // Sort cards by type (Pokemon, Supporter, Item, Tool, Stadium, Special Energy, Energy)
             deckCards = sortCardsByType(deckCards);
+            
+            // Save for image generation
+            currentDeckCards = deckCards;
+            
+            // Show/hide generate image button
+            const generateBtn = document.getElementById('generateDeckCardsBtn');
+            if (generateBtn) {
+                generateBtn.style.display = deckCards.length > 0 ? 'block' : 'none';
+            }
             
             // Update deck visual grid
             updateDeckVisual(deckCards);
@@ -1990,6 +2277,32 @@
             }
         }
         
+        function copyDeckToClipboard() {
+            if (myDeck.length === 0) {
+                alert('Dein Deck ist leer!');
+                return;
+            }
+            
+            let deckText = '';
+            myDeck.forEach(card => {
+                deckText += `${card.count}x ${card.name}\n`;
+            });
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(deckText).then(() => {
+                alert(`${myDeck.length} Karten in die Zwischenablage kopiert!\n\n${deckText}`);
+            }).catch(() => {
+                // Fallback für ältere Browser
+                const textarea = document.createElement('textarea');
+                textarea.value = deckText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert(`${myDeck.length} Karten in die Zwischenablage kopiert!\n\n${deckText}`);
+            });
+        }
+        
         function autoComplete() {
             const selectedDeck = document.getElementById('deckSelect').value;
             if (!selectedDeck) {
@@ -2000,16 +2313,56 @@
             myDeck = [];
             let deckCards = cardsData.filter(c => c.archetype === selectedDeck);
             
-            // Sort by card type first, then by percentage
-            deckCards = sortCardsByType(deckCards);
+            // Separate cards into Core (>90%) and Optional (≤90%)
+            let coreCards = [];
+            let optionalCards = [];
+            
+            deckCards.forEach(card => {
+                const percentage = parseFloat((card.percentage_in_archetype || '0').toString().replace(',', '.'));
+                if (percentage > 90) {
+                    coreCards.push(card);
+                } else {
+                    optionalCards.push(card);
+                }
+            });
+            
+            // Sort both groups by type, then by percentage
+            coreCards = sortCardsByType(coreCards);
+            optionalCards = sortCardsByType(optionalCards);
             
             let totalCards = 0;
-            for (const card of deckCards) {
+            
+            // Step 1: Add all Core cards (>90%)
+            for (const card of coreCards) {
                 if (totalCards >= 60) break;
                 
                 // Berechne Durchschnitt: total_count / deck_count
                 const avgCount = parseFloat(card.total_count) / parseFloat(card.deck_count);
-                // Runde: ab x,5 aufrunden, sonst abrunden
+                const recommendedCount = Math.round(avgCount);
+                
+                const count = Math.min(
+                    Math.max(1, recommendedCount || 1),
+                    4,
+                    60 - totalCards
+                );
+                
+                if (count > 0) {
+                    myDeck.push({
+                        identifier: card.card_identifier,
+                        name: card.card_name,
+                        count: count,
+                        maxCount: 4,
+                        imageUrl: card.image_url || ''
+                    });
+                    totalCards += count;
+                }
+            }
+            
+            // Step 2: Fill remaining slots with Optional cards (≤90%)
+            for (const card of optionalCards) {
+                if (totalCards >= 60) break;
+                
+                const avgCount = parseFloat(card.total_count) / parseFloat(card.deck_count);
                 const recommendedCount = Math.round(avgCount);
                 
                 const count = Math.min(
@@ -2195,7 +2548,132 @@
             const cardsBody = document.getElementById('cardsBody');
             cardsBody.innerHTML = `<tr><td colspan="6"><div class="error">${message}</div></td></tr>`;
         }
+        
+        function generateDeckImage() {
+            if (myDeck.length === 0) {
+                alert('Dein Deck ist leer!');
+                return;
+            }
+            
+            const modal = document.getElementById('imageViewModal');
+            const grid = document.getElementById('compactCardGrid');
+            
+            grid.innerHTML = myDeck.map(card => {
+                const imageUrl = card.imageUrl || '';
+                const count = card.count;
+                
+                if (imageUrl && imageUrl.trim() !== '') {
+                    return `
+                        <div class="compact-card" onclick="showCardImage('${imageUrl}', '${card.name}')">
+                            <img src="${imageUrl}" 
+                                 alt="${card.name}" 
+                                 loading="lazy"
+                                 referrerpolicy="no-referrer"
+                                 onerror="loadCardImageWithProxy(this, '${imageUrl}', '${card.name}', ${count})">
+                            <div class="compact-badge">${count}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="compact-card" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="compact-badge" style="position: static; margin-top: 10px;">${count}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            modal.classList.add('show');
+        }
+        
+        function generateFilteredCardsImage() {
+            if (filteredCards.length === 0) {
+                alert('Keine Karten zum Anzeigen! Bitte Filter anwenden.');
+                return;
+            }
+            
+            const modal = document.getElementById('imageViewModal');
+            const grid = document.getElementById('compactCardGrid');
+            
+            grid.innerHTML = filteredCards.map(card => {
+                const imageUrl = card.image_url || '';
+                const count = card.max_count || 1;
+                
+                if (imageUrl && imageUrl.trim() !== '') {
+                    return `
+                        <div class="compact-card" onclick="showCardImage('${imageUrl}', '${card.card_name}')">
+                            <img src="${imageUrl}" 
+                                 alt="${card.card_name}" 
+                                 loading="lazy"
+                                 referrerpolicy="no-referrer"
+                                 onerror="loadCardImageWithProxy(this, '${imageUrl}', '${card.card_name}', ${count})">
+                            <div class="compact-badge">${count}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="compact-card" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="compact-badge" style="position: static; margin-top: 10px;">${count}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            modal.classList.add('show');
+        }
+        
+        function generateDeckCardsImage() {
+            // Generate image view for current deck's card list
+            if (!currentDeckCards || currentDeckCards.length === 0) {
+                alert('Bitte wähle zuerst ein Deck aus!');
+                return;
+            }
+            
+            const modal = document.getElementById('imageViewModal');
+            const grid = document.getElementById('compactCardGrid');
+            
+            grid.innerHTML = currentDeckCards.map(card => {
+                const imageUrl = card.image_url || '';
+                const count = card.max_count || 1;
+                
+                if (imageUrl && imageUrl.trim() !== '') {
+                    return `
+                        <div class="compact-card" onclick="showCardImage('${imageUrl}', '${card.card_name}')">
+                            <img src="${imageUrl}" 
+                                 alt="${card.card_name}" 
+                                 loading="lazy"
+                                 referrerpolicy="no-referrer"
+                                 onerror="loadCardImageWithProxy(this, '${imageUrl}', '${card.card_name}', ${count})">
+                            <div class="compact-badge">${count}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="compact-card" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="compact-badge" style="position: static; margin-top: 10px;">${count}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            modal.classList.add('show');
+        }
+        
+        function closeImageView() {
+            const modal = document.getElementById('imageViewModal');
+            modal.classList.remove('show');
+        }
     </script>
+    
+    <!-- Image View Modal -->
+    <div id="imageViewModal" class="image-view-modal" onclick="if(event.target === this) closeImageView()">
+        <div class="image-view-content">
+            <div class="image-view-header">
+                <h3>🎨 Alle Karten Übersicht</h3>
+                <button class="image-view-close" onclick="closeImageView()">✕</button>
+            </div>
+            <div id="compactCardGrid" class="compact-card-grid"></div>
+        </div>
+    </div>
     <!-- Version: 2026-02-05 09:25 -->
 </body>
 </html>
