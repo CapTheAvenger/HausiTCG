@@ -817,11 +817,11 @@ def create_deck_list_html(deck_data: List[Dict[str, Any]], output_file: str, dec
                     <tr>
                         <td class="rank">#{deck['rank']}</td>
                         <td><strong>{deck['deck_name']}</strong></td>
-                        <td>{deck['count']:,}</td>
+                        <td>{deck['count']}</td>
                         <td>{deck['share']}</td>
-                        <td class="positive">{deck['wins']:,}</td>
-                        <td class="negative">{deck['losses']:,}</td>
-                        <td>{deck['ties']:,}</td>
+                        <td class="positive">{deck['wins']}</td>
+                        <td class="negative">{deck['losses']}</td>
+                        <td>{deck['ties']}</td>
                         <td><strong>{deck['win_rate']}</strong></td>
                     </tr>
                     ''' for deck in deck_data])}
