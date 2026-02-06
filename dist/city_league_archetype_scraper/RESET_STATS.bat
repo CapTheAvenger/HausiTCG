@@ -29,22 +29,28 @@ if /i not "%CONFIRM%"=="y" (
 REM Delete the files
 if exist "%DATA_DIR%\city_league_archetypes.csv" (
     del "%DATA_DIR%\city_league_archetypes.csv"
-    echo Deleted: city_league_archetypes.csv
+    echo Deleted: city_league_archetypes.csv (data)
 )
 
 if exist "%DATA_DIR%\city_league_archetypes_comparison.csv" (
     del "%DATA_DIR%\city_league_archetypes_comparison.csv"
-    echo Deleted: city_league_archetypes_comparison.csv
+    echo Deleted: city_league_archetypes_comparison.csv (data)
 )
 
 if exist "%DATA_DIR%\city_league_archetypes_deck_stats.csv" (
     del "%DATA_DIR%\city_league_archetypes_deck_stats.csv"
-    echo Deleted: city_league_archetypes_deck_stats.csv
+    echo Deleted: city_league_archetypes_deck_stats.csv (data)
 )
 
 if exist "%DATA_DIR%\city_league_archetypes_comparison.html" (
     del "%DATA_DIR%\city_league_archetypes_comparison.html"
-    echo Deleted: city_league_archetypes_comparison.html
+    echo Deleted: city_league_archetypes_comparison.html (data)
+)
+
+REM Delete HTML from dist folder
+if exist "%~dp0city_league_archetypes_comparison.html" (
+    del "%~dp0city_league_archetypes_comparison.html"
+    echo Deleted: city_league_archetypes_comparison.html (dist)
 )
 
 echo.
