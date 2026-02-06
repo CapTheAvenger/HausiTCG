@@ -1013,7 +1013,7 @@
         
         async function loadCardDatabase() {
             try {
-                const response = await fetch('../data/all_cards_database.csv');
+                const response = await fetch('data/all_cards_database.csv');
                 const text = await response.text();
                 // Remove BOM if present
                 let cleanText = text;
@@ -1042,7 +1042,7 @@
         async function loadCardsData() {
             try {
                 const candidates = [
-                    '../data/unified_card_data.csv'
+                    'data/unified_card_data.csv'
                 ];
                 let loaded = false;
 
@@ -1075,7 +1075,7 @@
         
         async function loadMatchupsData() {
             try {
-                const response = await fetch('../data/limitless_online_decks.csv');
+                const response = await fetch('data/limitless_online_decks.csv');
                 if (response.ok) {
                     const text = await response.text();
                     matchupsData = parseCSV(text);
@@ -1090,7 +1090,7 @@
         
         async function loadMatchupDetailsData() {
             try {
-                const response = await fetch('../data/limitless_online_decks_matchups.csv');
+                const response = await fetch('data/limitless_online_decks_matchups.csv');
                 if (response.ok) {
                     const text = await response.text();
                     matchupDetailsData = parseCSV(text);
@@ -1105,7 +1105,7 @@
         
         async function loadCityLeagueData() {
             try {
-                const response = await fetch('../data/city_league_archetypes_comparison.csv');
+                const response = await fetch('data/city_league_archetypes_comparison.csv');
                 if (response.ok) {
                     const text = await response.text();
                     cityLeagueData = parseCSV(text);

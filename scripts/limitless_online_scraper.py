@@ -714,6 +714,127 @@ def create_comparison_report(old_stats: Dict[str, Any], new_stats: Dict[str, Any
     # Print summary to console
     print_comparison_summary(comparison_data)
 
+def create_deck_list_html(deck_data: List[Dict[str, Any]], output_file: str, deck_lookup: Dict[str, Any]):
+    """Create a simple HTML report of all decks."""
+    base_path = get_data_dir()
+    html_path = os.path.join(base_path, output_file)
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limitless Online Decks - Overview</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }}
+        .content {{
+            padding: 30px;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+        th {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }}
+        td {{
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }}
+        tr:hover {{
+            background-color: #f8f9fa;
+        }}
+        .rank {{
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }}
+        .positive {{
+            color: #27ae60;
+            font-weight: bold;
+        }}
+        .negative {{
+            color: #e74c3c;
+            font-weight: bold;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Limitless Online Decks</h1>
+            <p>Complete Deck Statistics</p>
+        </div>
+        <div class="content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Deck Name</th>
+                        <th>Entries</th>
+                        <th>Meta Share</th>
+                        <th>Wins</th>
+                        <th>Losses</th>
+                        <th>Ties</th>
+                        <th>Win Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join([f'''
+                    <tr>
+                        <td class="rank">#{deck['rank']}</td>
+                        <td><strong>{deck['deck_name']}</strong></td>
+                        <td>{deck['count']:,}</td>
+                        <td>{deck['share']}</td>
+                        <td class="positive">{deck['wins']:,}</td>
+                        <td class="negative">{deck['losses']:,}</td>
+                        <td>{deck['ties']:,}</td>
+                        <td><strong>{deck['win_rate']}</strong></td>
+                    </tr>
+                    ''' for deck in deck_data])}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+
 def create_html_report(comparison_data: List[Dict[str, Any]], output_file: str, 
                        old_stats: Dict[str, Any], new_stats: Dict[str, Any], settings: Dict[str, Any], matchup_data: Optional[Dict[str, Any]] = None, deck_lookup: Optional[Dict[str, Any]] = None):
     """Create a visually appealing HTML comparison report."""
@@ -1223,7 +1344,7 @@ def main():
     print("=" * 60)
     try:
         html_file = settings['output_file'].replace('.csv', '.html')
-        create_html_report(deck_data, html_file, deck_lookup)
+        create_deck_list_html(deck_data, html_file, deck_lookup)
         print(f"✓ HTML report created: {html_file}")
     except Exception as e:
         print(f"⚠️  Could not create HTML report: {e}")
