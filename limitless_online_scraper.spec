@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['scripts\\limitless_online_scraper.py'],
+    ['limitless_online_scraper.py'],
     pathex=[],
     binaries=[],
     datas=[],

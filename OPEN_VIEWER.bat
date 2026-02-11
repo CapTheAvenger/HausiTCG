@@ -9,7 +9,7 @@ echo Öffnet den Deck Viewer im Browser...
 echo.
 
 REM Öffne den HTML Viewer im Standard-Browser
-start "" "web\deck_viewer.html"
+start "" "deck_viewer.html"
 
 echo.
 echo Deck Viewer wurde im Browser geöffnet!

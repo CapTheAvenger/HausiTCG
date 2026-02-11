@@ -1,0 +1,2 @@
+# Der scripts-Ordner und sein Inhalt sind nicht mehr notwendig, da alle relevanten Skripte und Daten in main/ liegen und die Tests erfolgreich laufen.
+# Du kannst den gesamten Ordner C:\Users\haush\OneDrive\Desktop\Unified Scraper TCG\scripts gefahrlos löschen.

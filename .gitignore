@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# PyInstaller builds
+build/
+dist/
+*.egg-info/
+*.spec~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temp files
+.DS_Store
+Thumbs.db
+*.tmp
+test_*.txt
+
+# Logs
+scraper_output.txt
+scraper_test.txt
+
+# CSV archives (only keep current data)
+data/archive/
