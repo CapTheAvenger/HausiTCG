@@ -1413,6 +1413,9 @@
     </div>
     
     <script>
+        // GitHub Pages base path detection
+        const BASE_PATH = window.location.hostname.includes('github.io') ? '/HausiTCG/' : '/';
+        
         // Global data storage - MUST be at the top before any functions
         let cardsData = [];
         let matchupsData = [];
@@ -1465,7 +1468,7 @@
                     console.log('[loadMatchupsData] START');
                     try {
                         const timestamp = new Date().getTime();
-                        const response = await fetch(`data/limitless_online_decks.csv?t=${timestamp}`);
+                        const response = await fetch(`${BASE_PATH}data/limitless_online_decks.csv?t=${timestamp}`);
                         if (response.ok) {
                             const text = await response.text();
                             matchupsData = parseCSV(text);
@@ -1474,7 +1477,7 @@
                             // Load matchups data
                             let matchupsDetailsData = [];
                             try {
-                                const matchupsUrl = `data/limitless_online_decks_matchups.csv?t=${timestamp}`;
+                                const matchupsUrl = `${BASE_PATH}data/limitless_online_decks_matchups.csv?t=${timestamp}`;
                                 console.log('[loadMatchupsData] Fetching from:', matchupsUrl);
                                 const matchupsResponse = await fetch(matchupsUrl);
                                 console.log('[loadMatchupsData] Matchups response status:', matchupsResponse.status, matchupsResponse.ok);
@@ -1517,7 +1520,7 @@
         // Loads cardsData from CSV (now global)
         async function loadCardsData() {
             try {
-                const response = await fetch('data/unified_card_data.csv');
+                const response = await fetch(BASE_PATH + 'data/unified_card_data.csv');
                 if (response.ok) {
                     const text = await response.text();
                     cardsData = parseCSV(text);
@@ -1812,7 +1815,7 @@
                 async function loadCityLeagueData() {
                     try {
                         const timestamp = new Date().getTime();
-                        const response = await fetch(`data/city_league_archetypes_comparison.csv?t=${timestamp}`);
+                        const response = await fetch(`${BASE_PATH}data/city_league_archetypes_comparison.csv?t=${timestamp}`);
                         if (response.ok) {
                             const text = await response.text();
                             cityLeagueData = parseCSV(text);
@@ -1822,7 +1825,7 @@
                             let tournamentCount = 0;
                             let dateRange = '';
                             try {
-                                const tournamentsResponse = await fetch(`data/city_league_archetypes.csv?t=${timestamp}`);
+                                const tournamentsResponse = await fetch(`${BASE_PATH}data/city_league_archetypes.csv?t=${timestamp}`);
                                 if (tournamentsResponse.ok) {
                                     const tournamentsText = await tournamentsResponse.text();
                                     const tournamentsData = parseCSV(tournamentsText);
@@ -2489,8 +2492,8 @@
 
             // Dynamically fetch and parse Top 20 Limitless and Top 10 City League from HTML reports
             Promise.all([
-                fetch('data/limitless_online_decks_comparison.html').then(r => r.text()).catch(() => ''),
-                fetch('data/city_league_archetypes_comparison.html').then(r => r.text()).catch(() => '')
+                fetch(BASE_PATH + 'data/limitless_online_decks_comparison.html').then(r => r.text()).catch(() => ''),
+                fetch(BASE_PATH + 'data/city_league_archetypes_comparison.html').then(r => r.text()).catch(() => '')
             ]).then(([limitlessHtml, cityHtml]) => {
                 console.log('Fetched HTML files successfully');
                 
@@ -4694,7 +4697,7 @@ console.log('BEFORE SORT - All cards count:', deckCards.length);
         function loadLimitlessComparison() {
             const limitlessContent = document.getElementById('limitlessContent');
             
-            fetch('data/limitless_online_decks_comparison.html')
+            fetch(BASE_PATH + 'data/limitless_online_decks_comparison.html')
                 .then(response => response.text())
                 .then(html => {
                     // Parse the loaded HTML

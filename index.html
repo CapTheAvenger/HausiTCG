@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokemon TCG Deck Viewer</title>
     <script>
-        // Redirect automatically after 0.5 second (for better UX)
-        window.location.href = '/deck_viewer.html';
+        // Redirect automatically (for better UX)
+        // Detect if we're on GitHub Pages (CapTheAvenger.github.io/HausiTCG)
+        const isGithubPages = window.location.hostname.includes('github.io');
+        const basePath = isGithubPages ? '/HausiTCG/' : '/';
+        window.location.href = basePath + 'deck_viewer.html';
     </script>
     <style>
         body {
