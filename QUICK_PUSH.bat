@@ -45,8 +45,16 @@ if errorlevel 1 (
     exit /b 0
 )
 
+echo.
 echo 🚀 git push
 git push
+
+if errorlevel 1 (
+    echo.
+    echo ❌ Fehler beim Push zu GitHub
+    pause
+    exit /b 1
+)
 
 echo.
 echo ✅ Erfolgreich gepusht!
@@ -54,3 +62,4 @@ echo.
 echo 📱 Online verfügbar: https://captheavenger.github.io/HausiTCG/
 echo.
 timeout /t 3
+
