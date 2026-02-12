@@ -903,6 +903,10 @@
                 flex: 1;
                 min-width: 80px;
             }
+            
+            .matchups-grid {
+                grid-template-columns: 1fr !important;
+            }
         }
         
         .btn {
@@ -1436,7 +1440,7 @@
                     <h2 style="color: #2c3e50; margin-top: 0;">🎯 Matchup-Analyse</h2>
                     <h3 style="color: #667eea; margin-top: 10px; margin-bottom: 20px;" id="matchupsDeckTitle">Deck Name</h3>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="matchups-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <!-- Best Matchups -->
                         <div>
                             <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Best Matchups</h4>
