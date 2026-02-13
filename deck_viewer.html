@@ -59,6 +59,27 @@
             margin-top: 60px;
             padding: 20px;
         }
+
+        @media (max-width: 768px) {
+            .tab-navigation {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 10px 12px;
+                gap: 8px;
+            }
+
+            .tab-btn {
+                width: 100%;
+                text-align: left;
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+
+            .content-wrapper {
+                margin-top: 220px;
+                padding: 14px;
+            }
+        }
         
         .tab-content {
             display: none;
@@ -1356,10 +1377,10 @@
 <body>
     <!-- Tab Navigation -->
     <div class="tab-navigation">
-        <button class="tab-btn active" onclick="switchTab('deck-viewer')">🃏 Deck Viewer & Builder</button>
-        <button class="tab-btn" onclick="switchTab('karten-filter')">🧰 Karten-Filter</button>
-        <button class="tab-btn" onclick="switchTab('city-league')">🇯🇵 City League Development</button>
-        <button class="tab-btn" onclick="switchTab('limitless-online')">🎮 Limitless Online Comparison</button>
+        <button class="tab-btn active" onclick="switchTab('deck-viewer')">🃏 Deck Analysis</button>
+        <button class="tab-btn" onclick="switchTab('karten-filter')">🧰 Cards</button>
+        <button class="tab-btn" onclick="switchTab('city-league')">🇯🇵 City League Meta</button>
+        <button class="tab-btn" onclick="switchTab('limitless-online')">🎮 Limitliss Live Meta</button>
     </div>
 
     <div class="content-wrapper">
