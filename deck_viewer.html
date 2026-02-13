@@ -3592,7 +3592,12 @@
             // Remove duplicates by set+number and filter out Japanese cards
             const uniqueByVersion = new Map();
             // English set codes to allow (filter out Japanese sets)
-            const englishSets = new Set(['SP', 'SS', 'RCL', 'EVS', 'FLI', 'SV', 'PAL', 'OSH', 'LOR', 'CRE', 'BRS', 'ASR', 'DAA', 'VIV', 'CEC', 'SSP', 'SFA', 'SCR', 'PRE', 'TEF', 'TWM', 'JTG', 'DRI', 'BLK', 'MEG', 'PFL', 'ALP', 'PMR', 'NSP', 'PSA', 'CLL']);
+            const englishSets = new Set([
+                'ASC', 'PFL', 'MEG', 'MEE', 'MEP',
+                'BLK', 'WHT', 'DRI', 'JTG', 'PRE', 'SSP', 'SCR', 'SFA', 'TWM', 'TEF',
+                'PAF', 'PAR', 'MEW', 'OBF', 'PAL', 'SVI', 'SVE', 'SVP',
+                'CRZ', 'SIT', 'LOR', 'PGO', 'ASR', 'BRS', 'FST', 'CEL', 'EVS', 'CRE', 'BST'
+            ]);
             
             toDisplay.forEach(card => {
                 const setCode = (card.set || card.set_code || '').trim().toUpperCase();
@@ -3615,6 +3620,15 @@
                 return;
             }
             
+            const buildCdnUrl = (code, number, padTo3 = false) => {
+                const safeCode = (code || '').trim().toUpperCase();
+                let safeNumber = (number || '').trim();
+                if (padTo3 && /^\d+$/.test(safeNumber)) {
+                    safeNumber = safeNumber.padStart(3, '0');
+                }
+                return `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/${safeCode}/${safeCode}_${safeNumber}_R_EN_LG.png`;
+            };
+
             console.log('displayCardArtworks - rendering', uniqueByVersion.size, 'cards');
             uniqueByVersion.forEach((card, index) => {
                 const setCode = (card.set || card.set_code || '').trim();
@@ -3625,14 +3639,29 @@
                 const cardDiv = document.createElement('div');
                 cardDiv.style.cssText = 'display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background: #f8f9fa;';
                 
+                // Construct image URL if not present
+                let imageUrl = card.image_url;
+                if (!imageUrl && setCode && setNumber) {
+                    // Build Limitless CDN URL pattern: https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/{SET}/{SET}_{NUM}_R_EN_LG.png
+                    imageUrl = buildCdnUrl(setCode, setNumber, false);
+                    console.log('🔧 Constructed image URL:', imageUrl);
+                }
+                
                 const img = document.createElement('img');
-                img.src = card.image_url || '';
+                img.src = imageUrl || '';
                 img.alt = card.name || card.card_name;
                 img.style.cssText = 'width: 100%; border-radius: 4px; cursor: pointer;';
                 img.onerror = () => {
-                    console.warn('❌ Image failed to load - set:', setCode, 'num:', setNumber);
+                    if (!img.dataset.triedPad && !card.image_url && /^\d+$/.test(setNumber) && setNumber.length < 3) {
+                        img.dataset.triedPad = '1';
+                        const paddedUrl = buildCdnUrl(setCode, setNumber, true);
+                        console.log('Retrying with padded number:', paddedUrl);
+                        img.src = paddedUrl;
+                        return;
+                    }
+                    console.warn('❌ Image failed to load - set:', setCode, 'num:', setNumber, 'URL:', imageUrl);
                 };
-                img.onclick = () => showCardImage(card.image_url, card.name || card.card_name);
+                img.onclick = () => showCardImage(imageUrl, card.name || card.card_name);
                 
                 const info = document.createElement('div');
                 info.style.cssText = 'font-size: 0.85em;';
