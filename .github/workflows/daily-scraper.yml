@@ -1,0 +1,106 @@
+name: Daily TCG Scraper
+
+on:
+  schedule:
+    # Läuft täglich um 0:00 Uhr UTC (1:00 Uhr MEZ im Winter, 2:00 Uhr MESZ im Sommer)
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # Ermöglicht manuelles Starten über GitHub UI
+
+jobs:
+  scrape-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Vollständige Git-Historie für gh-pages
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 lxml
+      
+      - name: Run City League Scraper
+        continue-on-error: true
+        run: |
+          echo "================================================"
+          echo "Running City League Archetype Scraper..."
+          echo "================================================"
+          python city_league_archetype_scraper.py
+      
+      - name: Run Limitless Online Scraper
+        continue-on-error: true
+        run: |
+          echo "================================================"
+          echo "Running Limitless Online Scraper..."
+          echo "================================================"
+          python limitless_online_scraper.py
+      
+      - name: Run Unified Card Scraper
+        continue-on-error: true
+        run: |
+          echo "================================================"
+          echo "Running Unified Card Scraper..."
+          echo "================================================"
+          python unified_card_scraper.py
+      
+      - name: Check for Changes
+        id: check_changes
+        run: |
+          git diff --exit-code data/ || echo "changes=true" >> $GITHUB_OUTPUT
+          echo "changes=false" >> $GITHUB_OUTPUT
+      
+      - name: Commit and Push Changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+          
+          # Aktuelles Datum/Zeit für Commit-Message
+          TIMESTAMP=$(date +'%d.%m.%Y %H:%M')
+          
+          # Stage alle Änderungen in data/
+          git add data/
+          git add deck_viewer.html index.html || true
+          
+          # Commit mit Timestamp
+          git commit -m "🤖 Automated data update - ${TIMESTAMP}" || exit 0
+          
+          # Push zu main branch
+          git push origin main
+          
+          echo "✅ Changes pushed to main branch"
+      
+      - name: Deploy to GitHub Pages
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          # Checkout gh-pages branch
+          git fetch origin gh-pages
+          git checkout gh-pages
+          
+          # Merge main branch changes
+          git merge origin/main -m "🚀 Deploy: Sync from main"
+          
+          # Push to gh-pages
+          git push origin gh-pages
+          
+          echo "✅ Changes deployed to GitHub Pages"
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "================================================"
+          echo "📊 SCRAPER RUN SUMMARY"
+          echo "================================================"
+          echo "✅ All scrapers executed"
+          echo "📅 Run completed at: $(date +'%d.%m.%Y %H:%M:%S')"
+          echo ""
+          echo "🌐 Website: https://captheavenger.github.io/HausiTCG/"
+          echo "================================================"
