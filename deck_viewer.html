@@ -4869,6 +4869,28 @@ console.log('BEFORE SORT - All cards count:', deckCards.length);
                 const imgHtml = imageUrl && imageUrl.trim() !== '' 
                     ? `<img src="${imageUrl}" alt="${card.card_name}" referrerpolicy="no-referrer" onerror="this.style.opacity='0.3'">`
                     : `<div style="width: 100%; aspect-ratio: 2.5/3.5; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2em;">🃏</div>`;
+
+                const setCode = (card.set_code || '').trim().toUpperCase();
+                const setNumber = (card.set_number || '').trim();
+                const rarityCategory = getRarityCategory(card.rarity);
+                let version = '1';
+                if (rarityCategory === 'mid') version = '2';
+                else if (rarityCategory === 'high') version = '3';
+
+                let cardmarketLinkHtml = '';
+                if (setCode && setNumber) {
+                    const priceKey = setCode + '/' + setNumber + '/' + version;
+                    const priceData = cardmarketPrices.get(priceKey);
+                    if (priceData && priceData.url) {
+                        if (version === '1') {
+                            cardmarketLinkHtml = `<a href="${priceData.url}" target="_blank" style="display:block; margin-top: 6px; text-decoration: none; color: #3498db; font-size: 0.85em;">🔍 CardMarket</a>`;
+                        } else if (priceData.price) {
+                            cardmarketLinkHtml = `<a href="${priceData.url}" target="_blank" style="display:block; margin-top: 6px; text-decoration: none; color: #27ae60; font-weight: 600; font-size: 0.95em;">💰 €${priceData.price}</a>`;
+                        } else {
+                            cardmarketLinkHtml = `<a href="${priceData.url}" target="_blank" style="display:block; margin-top: 6px; text-decoration: none; color: #3498db; font-size: 0.85em;">🔍 CardMarket</a>`;
+                        }
+                    }
+                }
                 
                 return `
                     <div class="card-item">
@@ -4877,6 +4899,7 @@ console.log('BEFORE SORT - All cards count:', deckCards.length);
                         <div class="card-item-info">
                             <div class="card-item-name">${card.card_name}${aceSpecBadge}</div>
                             <div class="card-item-set">${card.set_code} ${card.set_number} (${card.percentage_in_archetype})</div>
+                            ${cardmarketLinkHtml}
                         </div>
                         <div class="card-item-actions">
                             <button class="btn-add" data-identifier="${card.card_identifier}" data-max-count="${maxCount}" data-card-name="${card.card_name}" data-image-url="${imageUrl}" data-set-code="${card.set_code || ''}" data-set-number="${card.set_number || ''}">+ Add</button>
