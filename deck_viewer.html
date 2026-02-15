@@ -2112,10 +2112,13 @@
                 }
 
                 function getSelectedMetaMainOptions() {
+                    console.log('[DEBUG getSelectedMetaMainOptions] metaMainSelected:', Array.from(metaMainSelected), 'size:', metaMainSelected.size);
                     // If "all" is selected, treat as empty selection (show all)
                     if (metaMainSelected.has('all') || metaMainSelected.size === 0) {
+                        console.log('[DEBUG] Returning EMPTY set because "all" is selected or size is 0');
                         return new Set();
                     }
+                    console.log('[DEBUG] Returning selected meta:', Array.from(metaMainSelected));
                     return new Set(metaMainSelected);
                 }
 
@@ -4672,10 +4675,13 @@
         }
         
         function updateCardsDisplay() {
+            console.log('🔵 updateCardsDisplay() CALLED - NEW VERSION WITH FILTERS');
             // Meta-Main-Filter logic
             const selectedMeta = getSelectedMetaMainOptions();
             const selectedDeck = document.getElementById('deckSelect').value;
             const filter = document.getElementById('filterSelect').value;
+            
+            console.log('🔵 selectedMeta:', Array.from(selectedMeta), 'selectedDeck:', selectedDeck, 'filter:', filter);
             
             if (!selectedDeck) {
                 document.getElementById('cardsBody').innerHTML = '<tr><td colspan="7" class="loading">Bitte wähle ein Deck aus...</td></tr>';
@@ -4692,8 +4698,15 @@
             console.log('[updateCardsDisplay] After deck filter:', filteredRawData.length, 'cards');
             
             if (selectedMeta.size > 0) {
+                console.log('[DEBUG] Applying meta filter. selectedMeta:', Array.from(selectedMeta));
+                console.log('[DEBUG] Sample card before filter:', filteredRawData[0]?.card_name, 'meta value:', getCardMetaValue(filteredRawData[0]));
+                
                 filteredRawData = filteredRawData.filter(card => cardMatchesSelectedMeta(card, selectedMeta));
                 console.log('[updateCardsDisplay] After meta filter:', filteredRawData.length, 'cards');
+                
+                if (filteredRawData.length > 0) {
+                    console.log('[DEBUG] Sample card after filter:', filteredRawData[0]?.card_name, 'meta value:', getCardMetaValue(filteredRawData[0]));
+                }
             }
             
             // SECOND: Create deckCards from filteredRawData (not from cardsData directly!)
