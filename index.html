@@ -1897,16 +1897,18 @@
         async function loadAllCardsDatabase() {
             try {
                 const timestamp = new Date().getTime();
-                const response = await fetch(`./data/all_cards_database.csv?t=${timestamp}`);
+                const response = await fetch(`./data/all_cards_database.json?t=${timestamp}`);
                 if (response.ok) {
-                    const text = await response.text();
-                    allCardsDatabase = parseCSV(text);
+                    const jsonData = await response.json();
+                    // Extract cards array from JSON structure
+                    allCardsDatabase = jsonData.cards || jsonData;
                     window.allCardsDatabase = allCardsDatabase;
                     cardsByNameMap = buildCardsByNameMap(allCardsDatabase);
                     window.cardsByNameMap = cardsByNameMap;
-                    console.log(`✅ Loaded ${allCardsDatabase.length} cards from all_cards_database.csv`);
+                    console.log(`✅ Loaded ${allCardsDatabase.length} cards from all_cards_database.json`);
+                    console.log(`📊 Karten mit mehreren Versionen:`, Object.keys(cardsByNameMap).filter(k => cardsByNameMap[k].length > 1).length);
                 } else {
-                    console.error('❌ Failed to load all_cards_database.csv');
+                    console.error('❌ Failed to load all_cards_database.json');
                 }
             } catch (error) {
                 console.error('Error loading all cards database:', error);
