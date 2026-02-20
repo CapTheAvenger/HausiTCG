@@ -2065,7 +2065,12 @@
                     return priorityA - priorityB;
                 });
                 const selected = globalPref === 'max' ? sorted[sorted.length - 1] : sorted[0];
-                console.log(`[getPreferredVersionForCard] ${globalPref} rarity for "${cardName}": ${selected.set} ${selected.number} (${selected.rarity})`);
+                
+                // DEBUG: Log all versions and their priorities
+                console.log(`[getPreferredVersionForCard] All versions for "${cardName}":`, 
+                    versions.map(v => `${v.set} ${v.number} (${v.rarity || 'NO RARITY'}, priority: ${getRarityPriority(v.rarity)})`).join(', ')
+                );
+                console.log(`[getPreferredVersionForCard] ${globalPref} rarity for "${cardName}": ${selected.set} ${selected.number} (${selected.rarity}, priority: ${getRarityPriority(selected.rarity)})`);
                 return selected;
             }
 
@@ -2112,8 +2117,9 @@
 
             // High-end & secret rarities
             if (r.includes('ultra rare')) return 12;
-            if (r.includes('rainbow rare')) return 13;
-            if (r.includes('secret rare')) return 14;
+            if (r.includes('shiny rare')) return 13; // Shiny Vault cards (high rarity)
+            if (r.includes('rainbow rare')) return 14;
+            if (r.includes('secret rare')) return 15;
 
             return 0;
         }
