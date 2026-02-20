@@ -2152,7 +2152,7 @@
             if (!rarity) {
                 // Special handling: Promo sets without rarity should be treated between Low and Mid tier
                 // Priority: Low Rarity (1-3) < Promo (4) < Mid Rarity (5-9) < High Rarity (10-16)
-                const promoSets = ['MEP', 'PRE', 'SHP', 'PRO', 'MEE', 'BWP', 'XYP', 'SMP', 'SWP', 'SV-P'];
+                const promoSets = ['MEP', 'SVP', 'SP', 'SMP', 'XYP', 'BWP', 'HSP', 'DPP', 'NP', 'WP'];
                 if (setCode && promoSets.includes(setCode)) {
                     return 4; // Between Rare (3) and Holo Rare (5)
                 }
