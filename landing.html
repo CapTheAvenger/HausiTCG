@@ -3651,24 +3651,9 @@
                 window.cityLeagueDeckOrder = [];
             }
 
-            const globalPref = getGlobalRarityPreference();
-            
-            // If set/number provided AND global preference is max/min, find preferred version from international prints
-            if (setCode && setNumber && (globalPref === 'max' || globalPref === 'min')) {
-                const preferredVersion = getPreferredVersionForCard(cardName, setCode, setNumber);
-                if (preferredVersion) {
-                    setCode = preferredVersion.set;
-                    setNumber = preferredVersion.number;
-                }
-            }
-            // If no set/number provided, try to find preferred version (searches all cards with same name)
-            else if ((!setCode || !setNumber) && cardName) {
-                const preferredVersion = getPreferredVersionForCard(cardName);
-                if (preferredVersion) {
-                    setCode = preferredVersion.set;
-                    setNumber = preferredVersion.number;
-                }
-            }
+            // CRITICAL: Always store the original low rarity card (setCode/setNumber)
+            // Max Rarity artwork swapping happens only during rendering in renderMyDeckGrid
+            // This ensures consistent sorting based on archetype data
             
             // CRITICAL FIX: Check if card already exists with a different key format
             // If card exists as "CardName" but we're adding "CardName (SET NUM)", update the existing key
@@ -3927,8 +3912,28 @@
 
                 const globalPref = getGlobalRarityPreference();
                 const pref = getRarityPreference(baseName);
+                
+                // Handle image URL based on rarity preference
                 if (archetypeData && globalPref === 'auto' && (!pref || pref.mode !== 'specific')) {
                     cardData.image_url = archetypeData.image_url || cardData.image_url;
+                } else if (globalPref === 'max' || globalPref === 'min') {
+                    // For Max/Min Rarity: Get preferred version from international prints
+                    const setMatch = deckKey.match(/\(([A-Z0-9]+)\s+([A-Z0-9]+)\)$/);
+                    if (setMatch) {
+                        const originalSet = setMatch[1];
+                        const originalNumber = setMatch[2];
+                        const preferredVersion = getPreferredVersionForCard(baseName, originalSet, originalNumber);
+                        if (preferredVersion) {
+                            // Find the card in database to get image_url
+                            const preferredCard = allCardsFromDb.find(c => 
+                                c.name === baseName && c.set === preferredVersion.set && c.number === preferredVersion.number
+                            );
+                            if (preferredCard && preferredCard.image_url) {
+                                console.log(`[renderMyDeckGrid] Max Rarity swap for ${baseName}: ${originalSet} ${originalNumber} -> ${preferredVersion.set} ${preferredVersion.number}`);
+                                cardData.image_url = preferredCard.image_url;
+                            }
+                        }
+                    }
                 }
                 
                 deckCards.push({...cardData, deck_count_in_selected: count, deck_key: deckKey});
