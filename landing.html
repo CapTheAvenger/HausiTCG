@@ -2098,28 +2098,32 @@
             if (!rarity) return 0;
             const r = rarity.toLowerCase();
 
-            // Standard rarities
+            // Standard rarities (check common/uncommon first)
             if (r.includes('common')) return 1;
             if (r.includes('uncommon')) return 2;
-            if (r === 'rare' || r.includes('rare') && !r.includes('holo')) return 3;
-            if (r.includes('holo rare')) return 4;
 
-            // Gameplay rarities
-            if (r.includes('double rare')) return 5;
-            if (r.includes('triple rare')) return 6;
-            if (r.includes('radiant rare')) return 7;
-            if (r.includes('amazing rare')) return 8;
+            // High-end & secret rarities (check BEFORE plain rare)
+            if (r.includes('secret rare')) return 15;
+            if (r.includes('rainbow rare')) return 14;
+            if (r.includes('shiny rare')) return 13; // Shiny Vault cards (high rarity)
+            if (r.includes('ultra rare')) return 12;
 
             // Art rarities
-            if (r.includes('character holo rare') || r.includes('art rare') || r.includes('illustration rare')) return 9;
-            if (r.includes('character super rare')) return 10;
             if (r.includes('special art rare') || r.includes('special illustration rare')) return 11;
+            if (r.includes('character super rare')) return 10;
+            if (r.includes('character holo rare') || r.includes('art rare') || r.includes('illustration rare')) return 9;
 
-            // High-end & secret rarities
-            if (r.includes('ultra rare')) return 12;
-            if (r.includes('shiny rare')) return 13; // Shiny Vault cards (high rarity)
-            if (r.includes('rainbow rare')) return 14;
-            if (r.includes('secret rare')) return 15;
+            // Gameplay rarities
+            if (r.includes('amazing rare')) return 8;
+            if (r.includes('radiant rare')) return 7;
+            if (r.includes('triple rare')) return 6;
+            if (r.includes('double rare')) return 5;
+
+            // Holo rare
+            if (r.includes('holo rare')) return 4;
+
+            // Plain rare (check LAST as catch-all)
+            if (r === 'rare' || r.includes('rare')) return 3;
 
             return 0;
         }
