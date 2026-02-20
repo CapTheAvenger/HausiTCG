@@ -2049,6 +2049,13 @@
             const pref = getRarityPreference(cardName);
             const globalPref = getGlobalRarityPreference();
             const versions = getEnglishCardVersions(cardName);
+            
+            // DEBUG: Log when versions are not found
+            if (versions.length === 0) {
+                console.log(`[getPreferredVersionForCard] No versions found for: "${cardName}"`);
+                console.log(`[getPreferredVersionForCard] cardsByNameMap has:`, Object.keys(cardsByNameMap).filter(k => k.toLowerCase().includes(cardName.toLowerCase().substring(0, 5))).slice(0, 5));
+            }
+            
             if (versions.length === 0) return null;
 
             if (globalPref && (globalPref === 'max' || globalPref === 'min')) {
@@ -2057,7 +2064,9 @@
                     const priorityB = getRarityPriority(b.rarity);
                     return priorityA - priorityB;
                 });
-                return globalPref === 'max' ? sorted[sorted.length - 1] : sorted[0];
+                const selected = globalPref === 'max' ? sorted[sorted.length - 1] : sorted[0];
+                console.log(`[getPreferredVersionForCard] ${globalPref} rarity for "${cardName}": ${selected.set} ${selected.number} (${selected.rarity})`);
+                return selected;
             }
 
             if (!pref || globalPref === 'auto') {
@@ -4736,11 +4745,18 @@
                     for (let i = 0; i < card.addCount; i++) {
                         const globalPref = getGlobalRarityPreference();
                         const preferredVersion = getPreferredVersionForCard(card.card_name);
+                        
+                        // DEBUG: Log when using fallback set/number
+                        if (globalPref !== 'auto' && !preferredVersion) {
+                            console.warn(`[autoComplete] No preferred version found for "${card.card_name}", falling back to City League data: ${card.set_code} ${card.set_number}`);
+                        }
+                        
                         if (globalPref === 'auto') {
                             addCardToDeck('cityLeague', card.card_name);
                         } else if (preferredVersion) {
                             addCardToDeck('cityLeague', card.card_name, preferredVersion.set, preferredVersion.number);
                         } else {
+                            // FALLBACK: Use set/number from City League data (may be outdated/wrong!)
                             addCardToDeck('cityLeague', card.card_name, card.set_code, card.set_number);
                         }
                     }
