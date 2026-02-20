@@ -2092,16 +2092,22 @@
             if (originalSet && originalNumber) {
                 versions = getInternationalPrintsForCard(originalSet, originalNumber);
                 
+                // DEBUG: Log international prints for troubleshooting
+                console.log(`[getPreferredVersionForCard] International prints for ${cardName} (${originalSet} ${originalNumber}):`, 
+                    versions.map(v => `${v.set_code}-${v.number} (rarity: "${v.rarity || 'NONE'}")`));
+                
                 // Intelligent fallback: If no international prints OR if international prints has NO rarity data,
                 // fall back to all versions (fixes Judge DRI 222 issue while preserving Promo cards)
                 const hasSufficientRarity = versions.length > 0 && 
                     versions.some(v => v.rarity && v.rarity.trim() !== '');
                 
+                console.log(`[getPreferredVersionForCard] hasSufficientRarity for ${cardName}: ${hasSufficientRarity}`);
+                
                 if (versions.length === 0 || !hasSufficientRarity) {
                     const fallbackReason = versions.length === 0 ? 'no international prints' : 
                         'international prints has no rarity data';
                     versions = getEnglishCardVersions(cardName);
-                    console.log(`[getPreferredVersionForCard] ${fallbackReason} for ${cardName} (${originalSet} ${originalNumber}), using ALL versions`);
+                    console.log(`[getPreferredVersionForCard] ${fallbackReason} for ${cardName} (${originalSet} ${originalNumber}), using ALL ${versions.length} versions`);
                 } else {
                     console.log(`[getPreferredVersionForCard] Using international prints for ${cardName} (${originalSet} ${originalNumber})`);
                 }
