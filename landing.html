@@ -3555,6 +3555,11 @@
             if (source !== 'cityLeague') return;
             
             const deck = window.cityLeagueDeck;
+            
+            // Initialize deck order array if not exists
+            if (!window.cityLeagueDeckOrder) {
+                window.cityLeagueDeckOrder = [];
+            }
 
             // Apply saved rarity preference when no version is specified
             if ((!setCode || !setNumber) && cardName) {
@@ -3590,6 +3595,15 @@
                 console.log(`Migrating deck entry from "${existingKey}" to "${deckKey}"`);
                 deck[deckKey] = deck[existingKey];
                 delete deck[existingKey];
+                
+                // Update order array when migrating key
+                if (window.cityLeagueDeckOrder) {
+                    const oldKeyIndex = window.cityLeagueDeckOrder.indexOf(existingKey);
+                    if (oldKeyIndex !== -1) {
+                        window.cityLeagueDeckOrder[oldKeyIndex] = deckKey;
+                        console.log(`Updated deck order during migration: ${existingKey} -> ${deckKey} at position ${oldKeyIndex}`);
+                    }
+                }
             } else if (existingKey) {
                 deckKey = existingKey; // Use the existing key
             }
@@ -3628,6 +3642,12 @@
             }
             
             deck[deckKey]++;
+            
+            // Track insertion order
+            if (!window.cityLeagueDeckOrder.includes(deckKey)) {
+                window.cityLeagueDeckOrder.push(deckKey);
+            }
+            
             console.log(`Added card to deck: ${deckKey} -> ${deck[deckKey]}`);
             updateDeckDisplay('cityLeague');
         }
@@ -3640,6 +3660,13 @@
                 deck[deckKey]--;
                 if (deck[deckKey] === 0) {
                     delete deck[deckKey];
+                    // Remove from order tracking
+                    if (window.cityLeagueDeckOrder) {
+                        const idx = window.cityLeagueDeckOrder.indexOf(deckKey);
+                        if (idx !== -1) {
+                            window.cityLeagueDeckOrder.splice(idx, 1);
+                        }
+                    }
                 }
                 updateDeckDisplay('cityLeague');
             }
@@ -3650,6 +3677,7 @@
             
             if (confirm('Möchtest du wirklich alle Karten aus dem Deck entfernen?')) {
                 window.cityLeagueDeck = {};
+                window.cityLeagueDeckOrder = [];
                 updateDeckDisplay('cityLeague');
             }
         }
@@ -3688,6 +3716,11 @@
             // Build card data maps: by name and by name+set+number
             const cardDataByName = {};
             const cardDataByKey = {};
+            
+            // Initialize deck order array if not exists
+            if (!window.cityLeagueDeckOrder) {
+                window.cityLeagueDeckOrder = Object.keys(deck).filter(k => deck[k] > 0);
+            }
             
             // First, add cards from currentCityLeagueDeckCards
             allCards.forEach(card => {
@@ -3798,8 +3831,16 @@
                 deckCards.push({...cardData, deck_count_in_selected: count, deck_key: deckKey});
             }
             
-            // Apply sorting logic like other views
-            const sortedDeckCards = sortCardsByType(deckCards);
+            // Sort by insertion order instead of type/percentage
+            const sortedDeckCards = deckCards.sort((a, b) => {
+                const indexA = window.cityLeagueDeckOrder.indexOf(a.deck_key);
+                const indexB = window.cityLeagueDeckOrder.indexOf(b.deck_key);
+                // If not in order array (shouldn't happen), fallback to name
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
+            });
             
             // Build grid from deck
             let html = '';
@@ -4620,47 +4661,52 @@
             }
             
             // Step 4: Add remaining cards from highest percentage downwards with average count
-            // Skip cards with very low usage (< 5%) to avoid random tech cards
-            const MINIMUM_PERCENTAGE_THRESHOLD = 5.0;
+            // Use multiple passes with decreasing thresholds to ensure we fill the deck
+            const THRESHOLDS = [5.0, 2.0, 1.0, 0.1];
             
-            for (const card of deckCards) {
+            for (const threshold of THRESHOLDS) {
                 if (currentTotal >= 60) break;
                 
-                const cardName = card.card_name;
+                console.log(`[autoComplete] Pass with threshold ${threshold}%`);
                 
-                // Skip if already added
-                if (addedNames.has(cardName)) continue;
-                
-                // Skip Ace Spec cards (except the best one already added)
-                if (isAceSpec(card)) continue;
-                
-                // Check percentage threshold - skip very low-usage cards (including wrong energy types)
-                const percentage = parseFloat((card.percentage_in_archetype || '0').toString().replace(',', '.'));
-                if (percentage < MINIMUM_PERCENTAGE_THRESHOLD) {
-                    console.log('[autoComplete] Skipping low-usage card:', cardName, '(' + percentage.toFixed(2) + '% < 5%)');
-                    continue;
-                }
-                
-                // Calculate AVERAGE count for this card: total_count / total_decks_in_archetype
-                const totalCount = parseFloat(card.total_count) || 1;
-                const totalDecksInArchetype = parseFloat(card.total_decks_in_archetype) || 1;
-                let addCount = Math.round(totalCount / totalDecksInArchetype);
-                
-                // For base energies, no limit. For other cards, max 4
-                if (!isBaseEnergy(card)) {
-                    addCount = Math.max(1, Math.min(addCount, 4));
-                } else {
-                    addCount = Math.max(1, addCount);
-                }
-                
-                // Don't exceed deck limit (60 total cards)
-                addCount = Math.min(addCount, 60 - currentTotal);
-                
-                if (addCount > 0) {
-                    cardsToAdd.push({ ...card, addCount: addCount });
-                    addedNames.add(cardName);
-                    currentTotal += addCount;
-                    console.log('[autoComplete] Adding:', addCount + 'x', cardName, '(' + percentage.toFixed(2) + '%, avg:', (totalCount/totalDecksInArchetype).toFixed(2) + ')');
+                for (const card of deckCards) {
+                    if (currentTotal >= 60) break;
+                    
+                    const cardName = card.card_name;
+                    
+                    // Skip if already added
+                    if (addedNames.has(cardName)) continue;
+                    
+                    // Skip Ace Spec cards (except the best one already added)
+                    if (isAceSpec(card)) continue;
+                    
+                    // Check percentage threshold - skip very low-usage cards
+                    const percentage = parseFloat((card.percentage_in_archetype || '0').toString().replace(',', '.'));
+                    if (percentage < threshold) {
+                        continue;
+                    }
+                    
+                    // Calculate AVERAGE count for this card: total_count / total_decks_in_archetype
+                    const totalCount = parseFloat(card.total_count) || 1;
+                    const totalDecksInArchetype = parseFloat(card.total_decks_in_archetype) || 1;
+                    let addCount = Math.round(totalCount / totalDecksInArchetype);
+                    
+                    // For base energies, no limit. For other cards, max 4
+                    if (!isBaseEnergy(card)) {
+                        addCount = Math.max(1, Math.min(addCount, 4));
+                    } else {
+                        addCount = Math.max(1, addCount);
+                    }
+                    
+                    // Don't exceed deck limit (60 total cards)
+                    addCount = Math.min(addCount, 60 - currentTotal);
+                    
+                    if (addCount > 0) {
+                        cardsToAdd.push({ ...card, addCount: addCount });
+                        addedNames.add(cardName);
+                        currentTotal += addCount;
+                        console.log('[autoComplete] Adding:', addCount + 'x', cardName, '(' + percentage.toFixed(2) + '%, avg:', (totalCount/totalDecksInArchetype).toFixed(2) + ')');
+                    }
                 }
             }
             
@@ -5323,6 +5369,16 @@
                 
                 // Add to new key
                 window.cityLeagueDeck[newKey] = currentCount;
+
+                // CRITICAL: Update order array to preserve card position
+                if (window.cityLeagueDeckOrder) {
+                    const oldKeyIndex = window.cityLeagueDeckOrder.indexOf(oldDeckKey);
+                    if (oldKeyIndex !== -1) {
+                        // Replace old key with new key at same position
+                        window.cityLeagueDeckOrder[oldKeyIndex] = newKey;
+                        console.log(`Updated deck order: ${oldDeckKey} -> ${newKey} at position ${oldKeyIndex}`);
+                    }
+                }
 
                 // Save preference
                 setRarityPreference(actualCardName, { mode: 'specific', set: setCode, number: setNumber });
