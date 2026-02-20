@@ -4971,23 +4971,103 @@
             const baseNameMatch = deckKey.match(/^(.+?)\s*\(/);
             const actualCardName = baseNameMatch ? baseNameMatch[1] : cardName;
             
+            // Extract set and number from deckKey (e.g., "Boss's Orders (RCL 189)" -> set="RCL", number="189")
+            const setNumMatch = deckKey.match(/\(([A-Z0-9]+)\s+(\d+[A-Z]*)\)/);
+            let currentSet = '';
+            let currentNumber = '';
+            if (setNumMatch) {
+                currentSet = setNumMatch[1];
+                currentNumber = setNumMatch[2];
+            }
+            
             console.log(`[openRaritySwitcher] cardName: ${cardName}, deckKey: ${deckKey}, actualCardName: ${actualCardName}`);
 
             currentRaritySwitcherCard = { cardName: actualCardName, deckKey };
             
-            // Find all versions of this card - try multiple methods
-            let versions = [];
-            
-            // Method 1: Use cardsByNameMap if available
-            if (window.cardsByNameMap && window.cardsByNameMap[actualCardName]) {
-                versions = window.cardsByNameMap[actualCardName].slice();
-                console.log(`[openRaritySwitcher] Found ${versions.length} versions via cardsByNameMap`);
+            // Find current card's data
+            let currentCard = null;
+            if (currentSet && currentNumber) {
+                currentCard = window.allCardsDatabase.find(c => 
+                    c.name === actualCardName && c.set === currentSet && c.number === currentNumber
+                );
             }
             
-            // Method 2: Direct search in allCardsDatabase if cardsByNameMap failed
-            if (versions.length === 0 && window.allCardsDatabase) {
-                versions = window.allCardsDatabase.filter(card => card.name === actualCardName);
-                console.log(`[openRaritySwitcher] Found ${versions.length} versions via direct search`);
+            // Fallback: If no SET/NUMBER available, find the card with MOST international_prints
+            // This ensures we get the complete list (e.g., ASC-112 has "ASC-112,MEG-76,MEP-10" while MEP-10 only has "MEP-10")
+            if (!currentCard && window.allCardsDatabase) {
+                const candidateCards = window.allCardsDatabase.filter(c => 
+                    c.name === actualCardName && c.type && c.type.trim() !== '' && c.international_prints
+                );
+                
+                if (candidateCards.length > 0) {
+                    // Sort by number of international_prints (descending) - take the one with most reprints
+                    candidateCards.sort((a, b) => {
+                        const aCount = (a.international_prints || '').split(',').length;
+                        const bCount = (b.international_prints || '').split(',').length;
+                        return bCount - aCount;
+                    });
+                    
+                    currentCard = candidateCards[0];
+                    const intPrintCount = (currentCard.international_prints || '').split(',').length;
+                    console.log(`[openRaritySwitcher] Using card with MOST int.prints as reference: ${currentCard.set}-${currentCard.number} (${intPrintCount} prints)`);
+                } else {
+                    // Fallback to any card with this name (for type detection)
+                    const fallbackCard = window.allCardsDatabase.find(c => 
+                        c.name === actualCardName && c.type && c.type.trim() !== ''
+                    );
+                    if (fallbackCard) {
+                        currentCard = fallbackCard;
+                        console.log(`[openRaritySwitcher] Using fallback card for type detection: ${fallbackCard.set}-${fallbackCard.number} (${fallbackCard.type})`);
+                    }
+                }
+            }
+            
+            // Determine if this is a Pokemon card or Trainer/Energy card
+            // Trainer/Energy types: Supporter, Item, Stadium, Tool, Energy, Special Energy, Basic Energy
+            const trainerEnergyTypes = ['Supporter', 'Item', 'Stadium', 'Tool', 'Energy', 'Special Energy', 'Basic Energy'];
+            const isPokemonCard = currentCard && currentCard.type && !trainerEnergyTypes.includes(currentCard.type);
+            
+            // Find all versions based on card type
+            let versions = [];
+            
+            if (isPokemonCard) {
+                // POKEMON CARDS: Use international_prints from Limitless "Int. Prints" table
+                // This is THE definitive source - shows ALL functionally identical cards
+                // regardless of artwork, illustrator, or set
+                if (currentCard && currentCard.international_prints) {
+                    // Parse the comma-separated list of international prints
+                    // Format: "ASC-113,MEG-77,MEG-160,MEG-179,MEG-188,MPROMO-12"
+                    const intPrintIds = currentCard.international_prints.split(',').map(s => s.trim());
+                    const intPrintSet = new Set(intPrintIds);
+                    
+                    // Find all cards that match any of these set-number combinations
+                    versions = window.allCardsDatabase.filter(card => {
+                        const cardId = `${card.set}-${card.number}`;
+                        return intPrintSet.has(cardId) && card.name === actualCardName;
+                    });
+                    
+                    console.log(`[Pokemon Card] Found ${versions.length} international prints from Limitless data`);
+                    console.log(`[Pokemon Card] Int. Print IDs:`, intPrintIds);
+                } else {
+                    // No international_prints data available - show only current card
+                    versions = currentCard ? [currentCard] : [];
+                    console.warn(`[Pokemon Card] No international_prints data available, showing only current version`);
+                    if (versions.length === 1 && currentCard) {
+                        alert(`⚠️ International Print Daten für diese Karte noch nicht verfügbar.\n\nBitte All Cards Scraper neu laufen lassen mit international_prints Support.`);
+                    }
+                }
+            } else {
+                // TRAINER/ENERGY CARDS: Use name-based matching
+                // All versions with same name are functionally identical (reprints)
+                if (window.cardsByNameMap && window.cardsByNameMap[actualCardName]) {
+                    versions = window.cardsByNameMap[actualCardName].slice();
+                    console.log(`[Trainer/Energy] Found ${versions.length} reprints via name matching`);
+                } else if (window.allCardsDatabase) {
+                    versions = window.allCardsDatabase.filter(card => card.name === actualCardName);
+                    console.log(`[Trainer/Energy] Found ${versions.length} reprints via direct search`);
+                } else {
+                    versions = currentCard ? [currentCard] : [];
+                }
             }
             
             // Filter to English sets only if we have the set mapping
@@ -4996,9 +5076,31 @@
                 console.log(`[openRaritySwitcher] After English filter: ${versions.length} versions`);
             }
             
+            // Filter to only show cards with COMPLETE data
+            // Special handling: Pokemon cards found via international_prints are trusted (Limitless data is reliable)
+            // For Trainer/Energy (name-based matching), apply strict filter to avoid showing incomplete reprints
+            const beforeCompleteFilter = versions.length;
+            if (!isPokemonCard) {
+                // TRAINER/ENERGY: Strict filter - must have rarity, image_url, and international_prints
+                versions = versions.filter(version => {
+                    const hasRarity = version.rarity && version.rarity.trim() !== '';
+                    const hasImageUrl = version.image_url && version.image_url.trim() !== '';
+                    const hasIntPrints = version.international_prints && version.international_prints.trim() !== '';
+                    return hasRarity && hasImageUrl && hasIntPrints;
+                });
+                if (beforeCompleteFilter > versions.length) {
+                    console.log(`[Trainer/Energy Filter] Filtered out ${beforeCompleteFilter - versions.length} incomplete cards`);
+                    console.log(`[openRaritySwitcher] After complete data filter: ${versions.length} versions`);
+                }
+            } else {
+                // POKEMON: Trust international_prints data from Limitless - show all versions even if rarity/image missing
+                // These are functionally identical cards validated by Limitless TCG database
+                console.log(`[Pokemon Filter] Showing all ${versions.length} international prints (trusted Limitless data)`);
+            }
+            
             if (versions.length === 0) {
-                alert(`Keine Versionen für "${actualCardName}" gefunden.\n\nMögliche Gründe:\n- Karte nicht in all_cards_database.csv\n- Falscher Kartenname\n- Nur japanische Sets verfügbar\n\nGesuchter Name: "${actualCardName}"`);
-                console.error(`[openRaritySwitcher] No versions found for "${actualCardName}". Available cards:`, Object.keys(window.cardsByNameMap || {}).slice(0, 10));
+                alert(`Keine vollständigen Versionen für "${actualCardName}" gefunden.\n\nMögliche Gründe:\n- Karte nicht vollständig in Datenbank (fehlt Rarity/Image URL/Int. Prints)\n- All Cards Scraper muss noch Daten ergänzen\n- Nur japanische Sets verfügbar\n\nGesuchter Name: "${actualCardName}"\n\nTipp: Warte bis All Cards Scraper fertig ist.`);
+                console.error(`[openRaritySwitcher] No complete versions found for "${actualCardName}".`);
                 return;
             }
 
